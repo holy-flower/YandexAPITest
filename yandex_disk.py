@@ -6,7 +6,7 @@ class YandexApi:
                  token: Optional[str] = None,
                  headers: Optional[Dict] = None,
                  base_url: Optional[str] = None):
-        self.base_url = base_url,
+        self.base_url = base_url
 
         if headers:
             self.headers = headers
@@ -61,4 +61,18 @@ class YandexApi:
         respopnse = requests.get(url, headers=self.headers, params=params)
         respopnse.raise_for_status()
         return respopnse.json()
+
+    def file_move(self, from_res: str, path: str, overwrite: bool) -> bool:
+        url = f"{self.base_url}/v1/disk/resources/move"
+        params = {
+            "from" : from_res,
+            "path" : path,
+            "overwrite" : overwrite
+        }
+
+        response = requests.post(url, headers=self.headers, params=params)
+        print(f"Move status: {response.status_code}")
+        print(f"Move response: {response.text}")
+
+        return response.status_code in [201, 202]
 

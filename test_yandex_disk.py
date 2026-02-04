@@ -1,55 +1,69 @@
 import requests
 
+from yandex_disk import YandexApi
+
+
 class TestYandexDisk:
     def test_get_disk_info(self, headers, BASE_URL):
-        response = requests.get(f"{BASE_URL}/v1/disk/", headers=headers)
-        data = response.json()
+        client = YandexApi(headers=headers, base_url=BASE_URL)
+        data = client.get_disk_info()
 
-        assert response.status_code == 200
         assert "total_space" in data
         assert "used_space" in data
         assert data["used_space"] <= data["total_space"]
 
     def test_create_folder(self, headers, BASE_URL):
-        url = f"{BASE_URL}/v1/disk/resources"
-        params = {"path" : "/test_folder"}
+        client = YandexApi(headers=headers, base_url=BASE_URL)
 
-        requests.delete(url, headers=headers, params=params)
-        response = requests.put(url, headers=headers, params=params)
+        folder_path = "/test_folder"
 
-        data = response.json()
+        try:
+            client.delete_resource(folder_path, permanently=True)
+        except:
+            pass
 
-        assert response.status_code == 201
-        assert "method" in data
-        assert "href" in data
-        assert "templated" in data
+        assert client.create_folder("/test_folder") is True
 
     def test_upload_file(self, headers, BASE_URL):
-        url = f"{BASE_URL}/v1/disk/resources/upload"
-        params = {
-            "path" : "/test_folder/test.txt",
-            "overwrite" : "true"
-        }
+        client = YandexApi(headers=headers, base_url=BASE_URL)
 
-        response = requests.get(url, headers=headers, params=params)
-        upload_data = response.json()
-
-        assert response.status_code == 200
-
-        href = upload_data["href"]
-
+        folder_path = "/test_upload_file"
+        file_path = f"{folder_path}/test.txt"
         file_content = b"Hello Yandex"
-        put_response = requests.put(href, file_content)
-        assert put_response.status_code == 201
+
+        try:
+            client.delete_resource(folder_path, permanently=True)
+        except Exception:
+            pass
+
+        assert client.create_folder(folder_path) is True
+        assert client.upload_file(file_path, file_content) is True
 
     def test_delete_resource(self, headers, BASE_URL):
-        url = f"{BASE_URL}/v1/disk/resources"
-        params = {
-            "path" : "/test_folder",
-            "permanently" : "true"
-        }
+        client = YandexApi(headers=headers, base_url=BASE_URL)
 
-        response = requests.delete(url, headers=headers, params=params)
+        assert client.delete_resource("test_folder", permanently=True) is True
 
-        assert response.status_code in [202, 204]
+    def test_file_move(self, headers, BASE_URL):
+        client = YandexApi(headers=headers, base_url=BASE_URL)
+
+        source_folder = "/test_source_folder"
+        target_folder = "/test_target_folder"
+
+        try:
+            assert client.delete_resource(source_folder, permanently=True) is True
+            assert client.delete_resource(target_folder, permanently=True) is True
+        except:
+            pass
+
+        assert client.create_folder(source_folder) is True
+        assert client.create_folder(target_folder) is True
+
+        source_file = f"{source_folder}/test_file.txt"
+        file_content = b"Test content for moving"
+        assert client.upload_file(source_file, file_content) is True
+
+        target_file = f"{target_folder}/moved_test.txt"
+        assert client.file_move(source_file, target_file, overwrite=False) is True
+
 
