@@ -1,21 +1,8 @@
-from unittest.mock import patch, Mock
-import pytest
 import requests
 
-from yandex_disc import YandexApi
-
-class TestYandexDisc:
-    BASE_URL = "https://cloud-api.yandex.net"
-
-    @pytest.fixture
-    def headers(self):
-        return {
-            "Authorization" : "OAuth y0__xCSqK65BhjblgMgnq7Vpha78vjLLbS0bVlYXJGivA5ty2bdnw",
-            "Content-Type" : "application/json"
-        }
-
-    def test_get_disk_info(self, headers):
-        response = requests.get(f"{self.BASE_URL}/v1/disk/", headers=headers)
+class TestYandexDisk:
+    def test_get_disk_info(self, headers, BASE_URL):
+        response = requests.get(f"{BASE_URL}/v1/disk/", headers=headers)
         data = response.json()
 
         assert response.status_code == 200
@@ -23,8 +10,8 @@ class TestYandexDisc:
         assert "used_space" in data
         assert data["used_space"] <= data["total_space"]
 
-    def test_create_folder(self, headers):
-        url = f"{self.BASE_URL}/v1/disk/resources"
+    def test_create_folder(self, headers, BASE_URL):
+        url = f"{BASE_URL}/v1/disk/resources"
         params = {"path" : "/test_folder"}
 
         requests.delete(url, headers=headers, params=params)
@@ -37,8 +24,8 @@ class TestYandexDisc:
         assert "href" in data
         assert "templated" in data
 
-    def test_upload_file(self, headers):
-        url = f"{self.BASE_URL}/v1/disk/resources/upload"
+    def test_upload_file(self, headers, BASE_URL):
+        url = f"{BASE_URL}/v1/disk/resources/upload"
         params = {
             "path" : "/test_folder/test.txt",
             "overwrite" : "true"
@@ -55,8 +42,8 @@ class TestYandexDisc:
         put_response = requests.put(href, file_content)
         assert put_response.status_code == 201
 
-    def test_delete_resource(self, headers):
-        url = f"{self.BASE_URL}/v1/disk/resources"
+    def test_delete_resource(self, headers, BASE_URL):
+        url = f"{BASE_URL}/v1/disk/resources"
         params = {
             "path" : "/test_folder",
             "permanently" : "true"
