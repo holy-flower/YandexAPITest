@@ -1,21 +1,29 @@
 from unittest.mock import patch, Mock
 import pytest
+import requests
+
 from yandex_disc import YandexApi
 
 class TestYandexDisc:
-    def test_authorization(self):
-        client = YandexApi()
+    BASE_URL = "https://cloud-api.yandex.net"
 
-        with patch.object(client.session, 'post') as mock_post:
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"access_token": "y0__test_token"}
+    @pytest.fixture
+    def headers(self):
+        return {
+            "Authorization" : "OAuth y0__xCSqK65BhjblgMgnq7Vpha78vjLLbS0bVlYXJGivA5ty2bdnw",
+            "Content-Type" : "application/json"
+        }
 
-            mock_post.return_value = mock_response
+    def test_get_disk_info(self, headers):
+        response = requests.get(f"{self.BASE_URL}/v1/disk/", headers=headers)
 
-            response = client.authorize("y0__xCSqK65BhiIuz0g_5uOpRaImZY0ipTP5hBOn_mWg7CwhISymw")
+        assert response.status_code == 200
+        data = response.json()
+        assert "total_space" in data
+        assert "used_space" in data
 
-            assert response is True
+
+
 
 
 
