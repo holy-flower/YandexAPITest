@@ -37,9 +37,32 @@ class TestYandexDisc:
         assert "href" in data
         assert "templated" in data
 
+    def test_upload_file(self, headers):
+        url = f"{self.BASE_URL}/v1/disk/resources/upload"
+        params = {
+            "path" : "/test_folder/test.txt",
+            "overwrite" : "true"
+        }
 
+        response = requests.get(url, headers=headers, params=params)
+        upload_data = response.json()
 
+        assert response.status_code == 200
 
+        href = upload_data["href"]
 
+        file_content = b"Hello Yandex"
+        put_response = requests.put(href, file_content)
+        assert put_response.status_code == 201
 
+    def test_delete_resource(self, headers):
+        url = f"{self.BASE_URL}/v1/disk/resources"
+        params = {
+            "path" : "/test_folder",
+            "permanently" : "true"
+        }
+
+        response = requests.delete(url, headers=headers, params=params)
+
+        assert response.status_code in [202, 204]
 
