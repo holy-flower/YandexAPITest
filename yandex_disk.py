@@ -143,4 +143,15 @@ class YandexApi:
                 response.raise_for_status()
         raise Exception(f"Resource {path} did not appear in trash after {timeout} seconds")
 
+    def upload_file_to_disk(self, path: str, url_file: str) -> bool:
+        url = f"{self.base_url}/v1/disk/resources/upload"
+        params = {
+            "path" : path,
+            "url" : url_file
+        }
+
+        response = requests.post(url, headers=self.headers, params=params)
+
+        return response.status_code in (200, 202)
+
 

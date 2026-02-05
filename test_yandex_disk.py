@@ -113,11 +113,15 @@ class TestYandexDisk:
             info = client.get_resource_info(test_folder)
             assert info["type"] == "dir"
 
+    def test_upload_file_to_disk(self, headers, BASE_URL):
+        client = YandexApi(headers=headers, base_url=BASE_URL)
 
+        new_folder = f"/new_folder_{uuid.uuid4()}"
+        new_file = f"{new_folder}/new_file.txt"
+        url_file = "https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore"
 
+        assert client.create_folder(new_folder)
 
-
-
-
+        assert client.upload_file_to_disk(new_file, url_file)
 
 
