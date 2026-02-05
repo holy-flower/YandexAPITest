@@ -58,9 +58,9 @@ class YandexApi:
         url = f"{self.base_url}/v1/disk/resources"
         params = {"path" : path}
 
-        respopnse = requests.get(url, headers=self.headers, params=params)
-        respopnse.raise_for_status()
-        return respopnse.json()
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
 
     def file_move(self, from_res: str, path: str, overwrite: bool) -> bool:
         url = f"{self.base_url}/v1/disk/resources/move"
@@ -75,4 +75,22 @@ class YandexApi:
         print(f"Move response: {response.text}")
 
         return response.status_code in [201, 202]
+
+    def publish_resources(self, path: str) -> bool:
+        url = f"{self.base_url}/v1/disk/resources/publish"
+        params = {"path" : path}
+
+        response = requests.put(url, headers=self.headers, params=params)
+
+        return response.status_code == 200
+
+    def get_public_resource(self, public_key: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/v1/disk/public/resources"
+        params = {"public_key" : public_key}
+
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+
+        return response.json()
+
 

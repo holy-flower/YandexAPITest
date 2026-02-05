@@ -66,4 +66,29 @@ class TestYandexDisk:
         target_file = f"{target_folder}/moved_test.txt"
         assert client.file_move(source_file, target_file, overwrite=False) is True
 
+    def test_get_public_resource(self, headers, BASE_URL):
+        client = YandexApi(headers=headers, base_url=BASE_URL)
+
+        test_folder = "/folder_test"
+        test_file = f"{test_folder}/test_file.txt"
+        file_content = b"Test content for public"
+
+        try:
+            assert client.delete_resource(test_folder, permanently=True) is True
+        except:
+            pass
+
+        assert client.create_folder(test_folder) is True
+        assert client.upload_file(test_file, file_content) is True
+        assert client.publish_resources(test_file) is True
+        file_info = client.get_resource_info(test_file)
+        public_key = file_info["public_key"]
+
+
+        public_file = client.get_public_resource(public_key)
+
+        assert "name" in public_file
+        assert "size" in public_file
+
+
 
