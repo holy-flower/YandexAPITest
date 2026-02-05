@@ -154,4 +154,15 @@ class YandexApi:
 
         return response.status_code in (200, 202)
 
+    def list_public_resources(self, type: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/v1/disk/resources/public"
+        params = {"type" : type}
+
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+
+        print(response.json())
+
+        return response.json()
+
 

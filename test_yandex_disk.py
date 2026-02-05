@@ -124,4 +124,25 @@ class TestYandexDisk:
 
         assert client.upload_file_to_disk(new_file, url_file)
 
+    def test_list_public_resources(self, headers, BASE_URL):
+        client = YandexApi(headers=headers, base_url=BASE_URL)
+
+        test_folder = f"test_folder_{uuid.uuid4()}"
+        first_file = f"{test_folder}/first_file.txt"
+        second_file = f"{test_folder}/second_file.txt"
+        first_file_content = b"Text for first file"
+        second_file_content = b"Text for second file"
+
+        assert client.create_folder(test_folder)
+        assert client.upload_file(first_file, first_file_content)
+        assert client.upload_file(second_file, second_file_content)
+        assert client.publish_resources(first_file)
+        assert client.publish_resources(second_file)
+
+        list_files = client.list_public_resources("file")
+        file_names = [item["name"] for item in list_files["items"]]
+
+        assert first_file.split("/")[-1] in file_names
+        assert second_file.split("/")[-1] in file_names
+
 
