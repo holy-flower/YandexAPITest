@@ -1,3 +1,5 @@
+import time
+
 import requests
 from typing import Optional, Dict, Any
 
@@ -52,7 +54,19 @@ class YandexApi:
         }
 
         response = requests.delete(url, headers=self.headers, params=params)
-        return response.status_code in [201, 204]
+
+        if response.status_code == 202:
+            operation_href = response.json()["href"]
+
+            while True:
+                op_status = requests.get(operation_href, headers=self.headers).json()
+                if op_status["status"] == "success":
+                    break
+                elif op_status["status"] == "failed":
+                    raise Exception("Delete operation failed")
+                time.sleep(1)
+
+        return response.status_code in [201, 202, 204]
 
     def get_resource_info(self, path: str) -> Dict[str, Any]:
         url = f"{self.base_url}/v1/disk/resources"
@@ -92,5 +106,41 @@ class YandexApi:
         response.raise_for_status()
 
         return response.json()
+
+    def get_trash_resource_info(self, path: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/v1/disk/trash/resources"
+        params = {"path" : path}
+
+        response = requests.get(url, headers=self.headers, params=params)
+        assert response.status_code == 200
+        return response.json()
+
+    def restore_resource_from_trash(self, path: str, overwrite: bool) -> bool:
+        url = f"{self.base_url}/v1/disk/trash/resources/restore"
+        params = {
+            "path" : path,
+            "overwrite" : str(overwrite).lower()
+        }
+
+        response = requests.put(url, headers=self.headers, params=params)
+        #return response.status_code in (201, 202)
+        if response.status_code not in (201, 202):
+            print(f"Failed to restore {path}: {response.status_code}, {response.text}")
+            return False
+        return True
+
+    def wait_for_trash_resource(self, path: str, timeout: int = 30):
+        url = f"{self.base_url}/v1/disk/trash/resources"
+        params = {"path": path}
+
+        for _ in range(timeout):
+            response = requests.get(url, headers=self.headers, params=params)
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 404:
+                time.sleep(1)
+            else:
+                response.raise_for_status()
+        raise Exception(f"Resource {path} did not appear in trash after {timeout} seconds")
 
 
